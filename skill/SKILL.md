@@ -5,7 +5,7 @@ description: Coordinate Claude and Codex automatically through delegated design,
 
 # Claude–Codex collaborative workflow
 
-Use `scripts/workflow.py` for the complete loop. Both providers participate through separate authenticated CLI calls; the invoking chat coordinates. This does not resume or send messages to the user's existing Claude/Codex conversations. Both assistants receive the same self-contained skill. Resolve scripts relative to this SKILL.md; do not assume a username or another assistant installation. Use Python 3.10+ (python3 on macOS/Linux, python or py -3 on Windows).
+Use `dist/cli.cjs run` for the complete loop. Both providers participate through separate authenticated CLI calls; the invoking chat coordinates. This does not resume or send messages to the user's existing Claude/Codex conversations. Both assistants receive the same self-contained skill. Resolve the bundled executable relative to this SKILL.md; do not assume a username or another assistant installation. Use Node.js 22+. No Python runtime is required.
 
 ## Roles and authorization
 
@@ -23,7 +23,7 @@ Use `scripts/workflow.py` for the complete loop. Both providers participate thro
 3. Run using the installed authenticated CLIs:
 
 ```powershell
-python -X utf8 "<absolute path to this skill>/scripts/workflow.py" --config C:/path/to/task.json
+node "<absolute path to this skill>/dist/cli.cjs" run --config C:/path/to/task.json
 ```
 
 4. Keep the invocation running and poll through the host's process tools. It automatically performs design, discussion/revision, writer selection, implementation, actual tests, Claude review, Codex review and repairs. Both reviews must approve the same files/plan/test-evidence hash and supplied tests must pass. Default repair limit is 3. Report meaningful progress. Errors do not authorize bypassing restrictions.
@@ -32,9 +32,9 @@ python -X utf8 "<absolute path to this skill>/scripts/workflow.py" --config C:/p
 
 ## Usage collection
 
-`scripts/usage.py read` refreshes Codex quota through official `account/rateLimits/read` and reads the latest cached Claude observation. Each Claude worker call collects actual `rate_limit_event` telemetry using verbose stream-json, including normal five-hour/weekly unified windows. Design/discussion calls populate Claude quota before writer selection even in headless safe mode. Reading the cache alone does not launch another Claude model call. No auth-token scraping, private usage endpoints, credit purchases or reset consumption.
+`node "<skill-dir>/dist/cli.cjs" usage` refreshes Codex quota through official `account/rateLimits/read` and reads the latest cached Claude observation. Each Claude worker call collects actual `rate_limit_event` telemetry using verbose stream-json, including normal five-hour/weekly unified windows. Design/discussion calls populate Claude quota before writer selection even in headless safe mode. Reading the cache alone does not launch another Claude model call. No auth-token scraping, private usage endpoints, credit purchases or reset consumption.
 
-Interactive statusLine telemetry is a secondary source: headless safe-mode calls do not run the renderer. `usage.py install` backs up settings, preserves the old simple command and unrelated settings, and installs the collector. `usage.py uninstall` restores only that entry if still owned by this skill. The wrapper is optional and is not installed by the distribution installer; native CLI stream telemetry works without it. Missing rate-limit fields never overwrite valid cached observations; absent/stale observations remain unknown, and some model-specific limits may be absent. Never treat token counts, cost or context-window percentage as remaining account quota.
+Interactive statusLine telemetry is an optional secondary source. Native CLI stream events work without it. The installer migrates only a recognized v1 Python wrapper and preserves its saved original renderer; it does not install a new wrapper. Missing fields never erase a valid observation. Never substitute cost, token counts or context percentage for quota.
 
 Counters expire after 10 minutes or a window reset. The helper samples before each implementation round, not mid-file. Optional `usage_file` accepts a trusted observed snapshot when collectors are unavailable. Pinned authors bypass quota routing.
 
@@ -45,9 +45,8 @@ Counters expire after 10 minutes or a window reset. The helper samples before ea
 - Edit paths and contents are validated before application. Reject path escapes, sensitive paths, symlinks, duplicate/out-of-allowlist replacements. Each file replacement is atomic; multiple-file application is journaled, not transactional. No deletions.
 - Logs in `~/.codex/discussions/workflow-*/` may contain private code; do not commit/share them. Defaults: 20 model calls, 240s/call, Claude API cap 2 USD/call (subscription billing remains the CLI's responsibility). Call bounds are not a Codex spending/token cap.
 - Bounded active run, not a permanent file watcher. Persistent background scheduling needs a separate request. Missing evidence or provider limits can stop automation; do not promise guaranteed unattended completion.
-- Legacy `scripts/discuss.py` supports one Codex-to-Claude round; use workflow.py for the bidirectional lifecycle.
 
-Validate with `python -X utf8 -m unittest discover -s <skill-dir>/scripts -p "test_*.py"`.
+Validate the source with `npm ci`, `npm run typecheck`, and `npm test`. Diagnose installed CLI flags with `node "<skill-dir>/dist/cli.cjs" doctor`.
 
 For actual verified behavior and untested boundaries, read [references/validation.md](references/validation.md).
 

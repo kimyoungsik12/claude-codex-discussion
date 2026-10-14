@@ -1,0 +1,38 @@
+{
+  "name": "@youngsik1/claude-codex-discussion",
+  "version": "2.0.0",
+  "description": "Claude and Codex design agreement, quota-aware implementation and mutual review",
+  "type": "commonjs",
+  "bin": {
+    "claude-codex-discussion": "dist/cli.cjs"
+  },
+  "files": [
+    "dist/cli.cjs",
+    "skill/SKILL.md",
+    "skill/agents",
+    "skill/references",
+    "AI_INSTALL.md",
+    "TESTING.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kimyoungsik12/claude-codex-discussion.git"
+  },
+  "license": "UNLICENSED",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run build && node --test tests/*.test.cjs",
+    "prepack": "npm run typecheck && npm run build",
+    "test:package": "node scripts/smoke-package.cjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "esbuild": "0.28.2",
+    "smol-toml": "1.9.1",
+    "typescript": "7.0.2"
+  }
+}
