@@ -11,7 +11,7 @@ import install
 class InstallTests(unittest.TestCase):
     def test_corrupt_package_rejected_before_install(self):
         with tempfile.TemporaryDirectory() as tmp:
-            package = Path(tmp) / 'package'
+            package = (Path(tmp) / 'package').resolve()
             shutil.copytree(install.ROOT, package,
                             ignore=shutil.ignore_patterns('__pycache__', '.ruff_cache'))
             (package / 'skill/SKILL.md').write_text('damaged', 'utf-8')

@@ -1,9 +1,9 @@
 {
   ".gitattributes": "08a9b6e042a4481a2f94673836642990a02482af80dc9c2823922e8ddb75c4b1",
-  ".github/workflows/test.yml": "14326df83fee626f5c009988026286a4cffe4969834f9799acc35fee4a3cd6d9",
+  ".github/workflows/test.yml": "ed0e1a73bb9fd44165576da35b5dbbe397e936ce298c7a0d10e03bbada5a6a42",
   ".gitignore": "35bacff92ccd946cf4ae479c52f1f8b52b91e6a6417a6e78ebcabecef2c21834",
-  "AI_INSTALL.md": "79d93c98e9779c31fe149af70806344b062812fcb6e96dbfe2b409c2698f91e7",
-  "build_release.py": "2cd17a223e77254a7cde277f7c72016e6ee50aea2a42950b3a41caf4dc6f5bb3",
+  "AI_INSTALL.md": "5c5be0ad410ff19f84871a2513aa528f4ae902d4957b6c4418a33fd99590ed86",
+  "build_release.py": "50d14a61175affd58271b32031fb82398d35d2e6deb9e41a26aef67d898ca272",
   "install.cmd": "e0f632a4be559851e9d14e835e73d64363296adcb34a9415a4c30287b012230e",
   "install.py": "f1fd8008d829ff371090d538b1f6e7434059b2cb177ee745ac391f767095404a",
   "install.sh": "d4c471efff905df4724df8c2a8cf16bf1f5a7305cf2dc8c4b8c49ec41c06e204",
@@ -18,6 +18,6 @@
   "skill/scripts/usage.py": "3d012a0700535528ad47323087595ea8a0980cb56e7ab566e0637c9240c07629",
   "skill/scripts/workflow.py": "3940bfe3867f8477c17eb93582e861b2121e0b090787302fdc21aab41f1b2968",
   "skill/SKILL.md": "968c2be0e9b9d3a93533749ebaaf50760a892cc3b73efca7afb1ca15dc2311a8",
-  "test_install.py": "097d59591cba9e1b68b451de2104b306349852479719cd2cf2251074a57f20d6",
+  "test_install.py": "91f0db47b0e0a7c02f2ee61556144f163a37d3872f7a32aecb051c09cde0404d",
   "TESTING.md": "531a438b1fb3b05ced62c4bb2f60ee774b4939bc6ebea61c9ee11de67fc00a43"
 }

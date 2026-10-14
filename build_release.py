@@ -23,7 +23,7 @@ if __name__ == '__main__':
     manifest = {p.relative_to(ROOT).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
                 for p in selected}
     (ROOT / 'manifest.json').write_bytes((json.dumps(manifest, indent=2) + '\n').encode('utf-8'))
-    archive = ROOT.parent / 'claude-codex-discussion-v1.0.0.zip'
+    archive = ROOT.parent / 'claude-codex-discussion-v1.0.1.zip'
     with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as out:
         for path in selected + [ROOT / 'manifest.json']:
             out.write(path, 'claude-codex-discussion/' + path.relative_to(ROOT).as_posix())
