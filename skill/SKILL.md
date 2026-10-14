@@ -52,3 +52,7 @@ Validate with `python -X utf8 -m unittest discover -s <skill-dir>/scripts -p "te
 For actual verified behavior and untested boundaries, read [references/validation.md](references/validation.md).
 
 Sources: [Codex non-interactive execution](https://learn.chatgpt.com/docs/non-interactive-mode), [Codex usage RPC](https://learn.chatgpt.com/docs/app-server), [Claude quota telemetry](https://code.claude.com/docs/en/statusline).
+
+## Model settings
+
+The runner inherits saved user model and effort: Codex CODEX_HOME/config.toml (model, model_reasoning_effort, selected profile); Claude CLAUDE_CONFIG_DIR/settings.json (model, effortLevel), with ANTHROPIC_MODEL/CLAUDE_CODE_EFFORT_LEVEL taking precedence. Explicit task models/efforts override saved values. Missing values use CLI defaults. Only model/effort are forwarded; hooks/tools/permissions stay isolated. Unsupported model-setting syntax stops instead of silently selecting another model. Project-local settings, command-line overrides and unsaved interactive /model changes are not inherited; pass those explicitly in the task. Each call records model-settings.json.

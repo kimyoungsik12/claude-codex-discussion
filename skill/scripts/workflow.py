@@ -11,6 +11,7 @@ import time
 import uuid
 
 from discuss import invoke, snapshot
+from model_settings import apply_settings, selected_settings
 
 PROVIDERS = ("claude", "codex")
 SCHEMA = {
@@ -170,11 +171,9 @@ class Client:
                    "--sandbox", "read-only", "--skip-git-repo-check", "--disable", "shell_tool",
                    "--output-schema", str(schema_path), "--output-last-message", str(folder / "answer.json"),
                    "--json", "-"]
-        model = self.config.get("models", {}).get(provider)
-        if model:
-            # Must be a user-selected override in the task config, not a model chosen by the peer.
-            position = 1 if provider == "claude" else cmd.index("exec")
-            cmd[position:position] = ["--model", model]
+        selected = selected_settings(provider, self.config)
+        apply_settings(cmd, provider, selected)
+        save(folder / "model-settings.json", selected)
         print(json.dumps({"event": "calling", "provider": provider, "phase": phase,
                           "call": self.calls}), flush=True)
         child_env = os.environ.copy()

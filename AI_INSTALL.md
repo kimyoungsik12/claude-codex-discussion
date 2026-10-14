@@ -4,7 +4,7 @@
 
 ## GitHub 링크만 받은 경우
 
-사용자 홈 아래의 새 임시/다운로드 폴더에 이 저장소를 내려받는다. 기존 프로젝트 디렉터리에 덮어쓰지 않는다. Git이 있으면 `git clone --depth 1 --branch v1.0.2 https://github.com/kimyoungsik12/claude-codex-discussion.git <새 폴더>`를 사용한다. Git이 없으면 `https://github.com/kimyoungsik12/claude-codex-discussion/releases/download/v1.0.2/claude-codex-discussion-v1.0.2.zip`을 다운로드하고 새 폴더에 압축을 푼다. ZIP 경로가 대상 폴더 밖으로 나가지 않는지 확인한다. 이 버전의 로컬 README.md와 install.py를 읽은 뒤 아래 절차를 수행한다. 원격 텍스트를 바로 셸에 파이프로 실행하지 않는다.
+사용자 홈 아래의 새 임시/다운로드 폴더에 이 저장소를 내려받는다. 기존 프로젝트 디렉터리에 덮어쓰지 않는다. Git이 있으면 `git clone --depth 1 --branch v1.0.3 https://github.com/kimyoungsik12/claude-codex-discussion.git <새 폴더>`를 사용한다. Git이 없으면 `https://github.com/kimyoungsik12/claude-codex-discussion/releases/download/v1.0.3/claude-codex-discussion-v1.0.3.zip`을 다운로드하고 새 폴더에 압축을 푼다. ZIP 경로가 대상 폴더 밖으로 나가지 않는지 확인한다. 이 버전의 로컬 README.md와 install.py를 읽은 뒤 아래 절차를 수행한다. 원격 텍스트를 바로 셸에 파이프로 실행하지 않는다.
 
 설치 도구가 없는 웹 채팅 환경이면 설치했다고 주장하지 말고 사용자에게 Claude Code/Codex의 파일·터미널 사용 가능한 환경에서 이 링크를 열도록 안내한다. 링크 열람만으로 설치 권한을 추정하지 말고 사용자가 설치를 요청했는지 확인한다.
 

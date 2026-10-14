@@ -26,7 +26,7 @@ Create outside the repository from the user's instructions; peers cannot expand 
 - writer: auto/claude/codex. Explicit choices override quota balancing.
 - mode: design/implement. For design-only omit edit authorization and write_files. No test commands run in design mode.
 - tests: trusted executable argv arrays, run with shell=False in repo. On Windows use native executables or node plus npm-cli.js, not .ps1/.cmd shims. Do not concatenate untrusted shell text. Empty tests stop as unverified after review.
-- models: optional user-selected provider/model mapping. Omit to use CLI defaults. Codex child ignores user config, so explicitly carry any user-requested model.
+- models: optional user-selected provider/model mapping. Omit to inherit saved user CLI model settings. efforts is an optional provider-to-effort override. The runner forwards only model/effort while retaining isolated tool/permission settings.
 - Bounds: rounds 1–5 each; max_calls 1–40; timeout 1–600s; Claude API cap 0.01–10 USD/call. These are stopping policies, not promises that a large task fits.
 - usage_file: optional absolute path, re-read at writer selection. Otherwise native collectors run for auto writer. Schema below. observed_at/resets_at are Unix seconds. Include all applicable windows, never omit a depleted one. Missing counters remain absent.
 
