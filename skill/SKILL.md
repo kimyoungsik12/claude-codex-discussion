@@ -5,6 +5,8 @@ description: Coordinate Claude and Codex automatically through delegated design,
 
 # Claude–Codex collaborative workflow
 
+For a remote project or when one provider is authenticated on another machine, read [references/remote.md](references/remote.md). Install this skill on the repository host, then connect the provider host through SSH. If `node` is unavailable on PATH, read this installation's `runtime.json` and use its `node_path`.
+
 Use `dist/cli.cjs run` for the complete loop. Both providers participate through separate authenticated CLI calls; the invoking chat coordinates. This does not resume or send messages to the user's existing Claude/Codex conversations. Both assistants receive the same self-contained skill. Resolve the bundled executable relative to this SKILL.md; do not assume a username or another assistant installation. Use Node.js 22+. No Python runtime is required.
 
 ## Roles and authorization

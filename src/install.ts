@@ -1,12 +1,18 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {randomUUID} from 'node:crypto';
-import {home,Halt,save,readJSON,invoke,providerCommand,dataRoot,inside} from './core';
+import {home,Halt,save,readJSON,invoke,providerCommand,dataRoot,inside,findExecutable} from './core';
 import {claudeEntry,storeClaude} from './usage';
+import {endpointFor,bridgeRequest} from './bridge';
 export const skillName='claude-codex-discussion';
 export function destinations(userHome=home(),target='both',env=process.env) {
   if(!['both','codex','claude'].includes(target))throw new Halt('target must be both, codex or claude');
-  return (['codex','claude'] as const).filter(p=>target==='both'||target===p).map(p=>path.resolve(env[p==='codex'?'CODEX_HOME':'CLAUDE_CONFIG_DIR']||path.join(userHome,'.'+p),'skills',skillName));
+  return (['codex','claude'] as const).filter(p=>target==='both'||target===p).map(p=>{
+    const legacy=path.join(userHome,'.codex','skills',skillName);
+    const base=env[p==='codex'?'CODEX_HOME':'CLAUDE_CONFIG_DIR'];
+    if(p==='codex'&&!base)return fs.existsSync(legacy)?legacy:path.join(userHome,'.agents','skills',skillName);
+    return path.resolve(base||path.join(userHome,'.'+p),'skills',skillName);
+  });
 }
 function normalDirectory(target:string) {
   try{const st=fs.lstatSync(target);if(st.isSymbolicLink()||!st.isDirectory())throw new Halt('Destination must be a normal directory: '+target);}catch(e){if((e as NodeJS.ErrnoException).code!=='ENOENT')throw e;}
@@ -24,6 +30,9 @@ export function install(packageRoot:string,userHome=home(),target='both',env=pro
         fs.mkdirSync(stage);
         for(const entry of ['SKILL.md','agents','references'])if(fs.existsSync(path.join(source,entry)))fs.cpSync(path.join(source,entry),path.join(stage,entry),{recursive:true});
         fs.mkdirSync(path.join(stage,'dist'));fs.copyFileSync(runtime,path.join(stage,'dist','cli.cjs'));fs.chmodSync(path.join(stage,'dist','cli.cjs'),0o755);
+        const prefixes=[path.dirname(process.execPath)];
+        for(const provider of ['claude','codex']){const exe=findExecutable(provider);if(exe)prefixes.push(path.dirname(exe));}
+        save(path.join(stage,'runtime.json'),{node_path:process.execPath,platform:process.platform,path_prefixes:[...new Set(prefixes)]});
         if(fs.existsSync(dest)){backup=path.join(path.dirname(path.dirname(dest)),'skill-backups',skillName+'-'+randomUUID());fs.mkdirSync(path.dirname(backup),{recursive:true});fs.renameSync(dest,backup);}
         try{fs.renameSync(stage,dest);}catch(e){if(backup)fs.renameSync(backup,dest);throw e;}
         finished.push({dest,backup});
@@ -56,6 +65,8 @@ export function install(packageRoot:string,userHome=home(),target='both',env=pro
 export async function doctor() {
   let ok=true;
   for(const provider of ['claude','codex'] as const)try{
+    const endpoint=endpointFor(provider);
+    if(endpoint){await bridgeRequest(endpoint,{action:'health',provider},10);console.log(provider+': bridge reachable (model/login not checked)');continue;}
     const flags=provider==='claude'?['--safe-mode','--restricted','--json-schema','--effort']:['--ignore-user-config','--ephemeral','--output-schema'];
     const cmd=[...providerCommand(provider),...(provider==='codex'?['exec','--help']:['--help'])];
     const result=await invoke(cmd,'',process.cwd(),30);const missing=flags.filter(f=>!result.stdout.includes(f));

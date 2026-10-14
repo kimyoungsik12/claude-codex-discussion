@@ -1,13 +1,11 @@
-# v2.0.0 verification
+# v2.1.0 remote bridge verification
 
-Runtime: TypeScript bundled into a self-contained Node.js 22+ executable; Python is not required.
+- 33 automated tests plus TypeScript typecheck and packed npm installation passed locally on Windows. Bridge tests cover bearer authentication, provider/action isolation, loopback-only destinations, real caller-side file application/tests, cancellation and provider errors. The CI matrix runs the same suite on Windows, Ubuntu and macOS.
+- Actual Windows provider -> Linux SSH repository test (2026-10-14): remote Codex skills/list discovered the installed skill. Local Claude model settings and quota were read through a reverse SSH tunnel, listening only on remote 127.0.0.1.
+- A complete isolated workflow passed: local Claude Opus 5.5 designed, remote Codex reviewed, automatic quota routing selected remote Codex (Claude 17%, Codex 51% remaining), implementation was applied on Linux, actual Node assertions passed, and both reviewers approved. No real project files were edited.
+- The successful run used a dedicated Codex CLI 0.162.1. Earlier attempts with the app's 0.154.0 returned service 503/429 errors; this does not establish a version incompatibility. The app-managed binary was not replaced. Opus 5.5 was an explicit smoke-test override; saved model preferences were preserved.
+- Live opposite-provider bridging (local Codex serving a remote Claude coordinator) and macOS provider-host execution have not been authenticated end-to-end. Both providers share the bridge transport; automated tests cover the constraints, not all platform accounts.
 
-- Windows: 27 automated tests passed, plus TypeScript typecheck. Tests cover quota freshness/thresholds, pinned/reversed roles, explicit quota-error handoff, exact-hash agreement, concurrency, bounded execution, actual Node assertions, install rollback and v1 statusline migration.
-- Real Windows workflow (2026-10-14): Claude Opus 5.5 (claude-opus-5-5), Codex gpt-6-astra with medium effort and Codex CLI 0.162.1 completed design, peer agreement, implementation, actual Node acceptance tests, and both reviews. Task was a small increment function, not a production application.
-- Real quota collection: Claude five-hour/weekly stream events and Codex account/rateLimits/read. Observed Claude 46% minimum remaining and Codex 57%; default Claude selected. Low-quota switching was verified with synthetic test fixtures, not by exhausting a real account.
-- Saved opus[1m] failed with model_not_found. Only the test config used the exact Opus 5.5 ID. Codex CLI 0.134.0 rejected gpt-6-astra; a temporary 0.162.1 install succeeded. Personal model settings were not changed.
-- CI matrix runs the Node tests, typecheck and npm packaging on Windows, Ubuntu and macOS. Consult the linked CI run for the current result; actual authenticated model calls were tested on Windows only.
+The local connect process must remain running. It is not a startup service and does not automatically resume interrupted work. Logs can contain private selected source. CLI flag/health checks do not prove a model is available. Consensus does not guarantee production correctness.
 
-Run locally: npm ci, npm run typecheck, npm test, npm pack.
-
-CLI help/doctor is not authentication or model-availability proof. Provider tests use controlled replies except the explicitly reported real smoke above. Agreement is not a guarantee of production correctness. Do not distribute local workflow logs containing private code.
+Run: npm ci; npm run typecheck; npm test; npm run test:package.

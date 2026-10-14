@@ -5,16 +5,18 @@ import {createHash, randomUUID} from 'node:crypto';
 import {spawn, spawnSync} from 'node:child_process';
 
 export type Provider = 'claude' | 'codex';
+export type Endpoint = {url:string;token_file:string};
 export type Config = {
   repo:string; task:string; files:string[]; write_files?:string[]; mode?:'design'|'implement';
   designer?:Provider; writer?:Provider|'auto'; implementation_authorized?:boolean;
   constraints?:string[]; tests?:string[][]; models?:Partial<Record<Provider,string>>;
   efforts?:Partial<Record<Provider,string>>; usage_file?:string;
+  providers?:Partial<Record<Provider,Endpoint>>;
   max_design_rounds?:number; max_implementation_rounds?:number; max_calls?:number;
   timeout_seconds?:number; claude_budget_usd_per_call?:number;
 };
 export class Halt extends Error {}
-export class ProviderFailure extends Halt { constructor(message:string, public quota=false) {super(message);} }
+export class ProviderFailure extends Halt { constructor(message:string, public quota=false, public code='provider_failed') {super(message);} }
 export const home = () => os.homedir();
 export const dataRoot = () => path.join(home(), '.codex', 'discussions');
 export const now = () => Date.now()/1000;
@@ -84,15 +86,16 @@ export function killTree(pid:number) {
   if (process.platform==='win32') spawnSync('taskkill',['/PID',String(pid),'/T','/F'],{windowsHide:true,stdio:'ignore'});
   else {try {process.kill(-pid,'SIGKILL');} catch {try{process.kill(pid,'SIGKILL');}catch{}}}
 }
-export function invoke(argv:string[],input:string,cwd:string,timeout:number,env=process.env):Promise<Execution> {
+export function invoke(argv:string[],input:string,cwd:string,timeout:number,env=process.env,signal?:AbortSignal):Promise<Execution> {
   if (!argv.length || argv.some(x=>typeof x!=='string') || (process.platform==='win32' && /\.(cmd|bat|ps1)$/i.test(argv[0]))) throw new Halt('Use native executable argv, not shell shims');
   return new Promise((resolve,reject)=>{
     const child=spawn(argv[0],argv.slice(1),{cwd,env,shell:false,windowsHide:true,detached:process.platform!=='win32',stdio:'pipe'});
     let stdout='',stderr='',bytes=0,timed_out=false,overflow=false;
     const stop=()=>{if(child.pid)killTree(child.pid);};
     const timer=setTimeout(()=>{timed_out=true;stop();},timeout*1000);
-    const signal=()=>stop(); process.once('SIGINT',signal); process.once('SIGTERM',signal);
-    const clean=()=>{clearTimeout(timer);process.removeListener('SIGINT',signal);process.removeListener('SIGTERM',signal);};
+    const interrupt=()=>stop(); process.once('SIGINT',interrupt); process.once('SIGTERM',interrupt);
+    signal?.addEventListener('abort',stop,{once:true}); if(signal?.aborted)stop();
+    const clean=()=>{clearTimeout(timer);process.removeListener('SIGINT',interrupt);process.removeListener('SIGTERM',interrupt);signal?.removeEventListener('abort',stop);};
     child.stdout.setEncoding('utf8'); child.stderr.setEncoding('utf8');
     const add=(part:string,err:boolean)=>{bytes+=Buffer.byteLength(part);if(bytes>16_000_000){overflow=true;stop();return;} if(err)stderr+=part;else stdout+=part;};
     child.stdout.on('data',s=>add(s,false));child.stderr.on('data',s=>add(s,true));

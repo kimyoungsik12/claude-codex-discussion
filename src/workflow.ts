@@ -3,7 +3,8 @@ import path from 'node:path';
 import {randomUUID} from 'node:crypto';
 import {Config,Provider,Halt,ProviderFailure,collect,Snapshot,digest,save,readJSON,safePath,now,invoke,providerCommand,dataRoot,inside} from './core';
 import {selectedSettings,applySettings} from './settings';
-import {parseClaudeStream,readUsage,chooseWriter,remaining,Usage} from './usage';
+import {parseClaudeStream,chooseWriter,remaining,Usage} from './usage';
+import {endpointFor,bridgeRequest,routedUsage} from './bridge';
 
 export type Reply={decision:'approve'|'revise'|'blocked';artifact_id:string;plan:string;issues:string[];changes:{path:string;content:string}[]};
 export interface AskClient {ask(provider:Provider,phase:string,payload:any):Promise<Reply>}
@@ -31,25 +32,36 @@ export function validateReply(value:any):Reply {
 }
 export class Client implements AskClient {
   calls=0;
-  constructor(public run:string,public config:Config){}
+  constructor(public run:string,public config:Config,private localOnly=false,private signal?:AbortSignal){}
   async ask(provider:Provider,phase:string,payload:any):Promise<Reply> {
     if(++this.calls>(this.config.max_calls??20))throw new Halt('Total model-call limit reached');
     const folder=path.join(this.run,String(this.calls).padStart(2,'0')+'-'+phase+'-'+provider);fs.mkdirSync(folder);
-    const prompt=SYSTEM+'\n'+JSON.stringify({phase,...payload});
+    const prompt=SYSTEM+'\n'+JSON.stringify({...payload,phase});
     if(Buffer.byteLength(prompt)>480000)throw new Halt('Prompt budget exceeded');
     fs.writeFileSync(path.join(folder,'prompt.txt'),prompt,{mode:0o600});save(path.join(folder,'schema.json'),SCHEMA);
+    const endpoint=this.localOnly?undefined:endpointFor(provider,this.config);
+    if(endpoint){
+      console.log(JSON.stringify({event:'calling',provider,phase,call:this.calls,transport:'ssh_bridge'}));
+      const timeout=Math.min(this.config.timeout_seconds??240,240);
+      const result=await bridgeRequest(endpoint,{action:'ask',provider,phase,payload,models:this.config.models,efforts:this.config.efforts,timeout_seconds:timeout,claude_budget_usd_per_call:Math.min(this.config.claude_budget_usd_per_call??2,2)},timeout+10,this.signal);
+      const reply=validateReply(result.reply);save(path.join(folder,'model-settings.json'),result.settings);save(path.join(folder,'result.json'),reply);return reply;
+    }
     let cmd=providerCommand(provider);
     if(provider==='claude')cmd.push('--print','--verbose','--output-format','stream-json','--safe-mode','--restricted','--tools','','--strict-mcp-config','--permission-mode','dontAsk','--no-session-persistence','--max-budget-usd',String(this.config.claude_budget_usd_per_call??2),'--json-schema',JSON.stringify(SCHEMA),'--system-prompt',SYSTEM);
     else cmd.push('-a','never','exec','--ignore-user-config','--ephemeral','--sandbox','read-only','--skip-git-repo-check','--disable','shell_tool','--output-schema',path.join(folder,'schema.json'),'--output-last-message',path.join(folder,'answer.json'),'--json','-');
     const selected=selectedSettings(provider,this.config);cmd=applySettings(cmd,provider,selected);save(path.join(folder,'model-settings.json'),selected);
     console.log(JSON.stringify({event:'calling',provider,phase,call:this.calls,settings:selected}));
     const env={...process.env};if(provider==='claude')delete env.CLAUDECODE;
-    const out=await invoke(cmd,prompt,folder,this.config.timeout_seconds??240,env);
+    const out=await invoke(cmd,prompt,folder,this.config.timeout_seconds??240,env,this.signal);
     fs.writeFileSync(path.join(folder,'stdout.txt'),out.stdout,{mode:0o600});fs.writeFileSync(path.join(folder,'stderr.txt'),out.stderr,{mode:0o600});
     let raw:any=null;
     if(provider==='claude') {const parsed=parseClaudeStream(out.stdout);raw=parsed.result;if(parsed.latest)save(path.join(folder,'usage-observed.json'),parsed.latest);}
     const quota=provider==='claude'&&(raw?.api_error_status===429||['rate_limit','rate_limit_error','usage_limit'].includes(raw?.error));
-    if(out.exit_code!==0||raw?.is_error)throw new ProviderFailure(provider+' CLI failure; see '+folder,quota);
+    if(out.exit_code!==0||raw?.is_error){
+      const diagnostic=out.stdout+'\n'+out.stderr;
+      const code=/model_not_found|requires a newer version of Codex/.test(diagnostic)?'model_unavailable':/429 Too Many Requests/.test(diagnostic)?'provider_rate_limited':out.timed_out?'provider_timeout':'provider_failed';
+      throw new ProviderFailure(provider+' '+code+'; see '+folder,quota,code);
+    }
     const result=provider==='claude'?(raw?.structured_output??JSON.parse(raw?.result||'null')):readJSON(path.join(folder,'answer.json'));
     const reply=validateReply(result);save(path.join(folder,'result.json'),reply);return reply;
   }
@@ -96,7 +108,7 @@ export function validateConfig(config:Config) {
   for(const [key,def,lo,hi] of bounds){const n=config[key]??def;if(typeof n!=='number'||!Number.isFinite(n)||n<lo||n>hi||(key!=='claude_budget_usd_per_call'&&!Number.isInteger(n)))throw new Halt('Invalid '+key);}
   if(config.tests!==undefined&&(!Array.isArray(config.tests)||config.tests.some(a=>!Array.isArray(a)||!a.length||a.some(x=>typeof x!=='string'))))throw new Halt('Invalid test commands');
 }
-export async function workflow(config:Config,run:string,client?:AskClient,usageReader:()=>Promise<Usage>=readUsage) {
+export async function workflow(config:Config,run:string,client?:AskClient,usageReader:()=>Promise<Usage>=()=>routedUsage(config)) {
   validateConfig(config);const repo=fs.realpathSync(config.repo);
   const names=[...new Set([...(config.files??[]),...(config.write_files??[])])];if(!names.length)throw new Halt('Select context files');
   client??=new Client(run,config);const designer=config.designer??'codex',peer=designer==='claude'?'codex':'claude',requested=config.writer??'auto';

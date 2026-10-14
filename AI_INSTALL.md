@@ -1,10 +1,10 @@
-# AI installation guide (v2)
+# AI installation guide (v2.1)
 
 Install only when requested. Do not start project edits or model workflows as part of installation.
 
-1. Verify Node.js 22+ and npm. Inspect metadata with `npm view @youngsik1/claude-codex-discussion@2.0.0`. This repository contains the source.
-2. Run `npx --yes @youngsik1/claude-codex-discussion@2.0.0 install`. Default installs both assistants. Use `--target codex` or `--target claude` if requested.
-3. Run `npx --yes @youngsik1/claude-codex-discussion@2.0.0 doctor` and `npx --yes @youngsik1/claude-codex-discussion@2.0.0 models`.
+1. Verify Node.js 22+ and npm. Inspect metadata with `npm view @youngsik1/claude-codex-discussion@2.1.0`. This repository contains the source.
+2. Run `npx --yes @youngsik1/claude-codex-discussion@2.1.0 install`. Default installs both assistants. Use `--target codex` or `--target claude` if requested.
+3. Run `npx --yes @youngsik1/claude-codex-discussion@2.1.0 doctor` and `npx --yes @youngsik1/claude-codex-discussion@2.1.0 models`.
 4. Missing CLI/login: direct the user to official Claude Code / Codex CLI installation and login. Never request passwords/tokens or copy credentials. Supported flags do not prove model availability. Update user CLIs only with authorization.
 5. Report installed paths, backups and prerequisites. Open a new AI session. Do not install Python.
 
@@ -15,7 +15,9 @@ Source alternative: `npm ci`, `npm run typecheck`, `npm test`, then `node dist/c
 If npm returns E404 while the new package is being processed, install the verified v2 release tarball instead:
 
 ```sh
-npx --yes --package https://github.com/kimyoungsik12/claude-codex-discussion/releases/download/v2.0.0/youngsik1-claude-codex-discussion-2.0.0.tgz claude-codex-discussion install
+npx --yes --package https://github.com/kimyoungsik12/claude-codex-discussion/releases/download/v2.1.0/youngsik1-claude-codex-discussion-2.1.0.tgz claude-codex-discussion install
 ```
 
 The release tarball uses the same Node runtime. In Windows PowerShell, use `npx.cmd` if the PowerShell shim alters arguments. After installation, run `node "<installed-skill>/dist/cli.cjs" doctor`.
+
+For SSH projects, install on the actual remote host/user too. If a provider is authenticated only on the local machine, follow skill/references/remote.md. Discover the actual project host instead of assuming the project display name is its SSH alias. Do not copy provider credentials.

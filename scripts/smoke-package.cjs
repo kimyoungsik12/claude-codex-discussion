@@ -17,9 +17,9 @@ try {
   const tar = path.join(root, packed[0].filename);
   assert.ok(!packed[0].files.some(f => /\.py$|node_modules|stdout\.txt/.test(f.path)));
   run([process.env.npm_execpath, 'exec', '--yes', '--package', tar, '--', 'claude-codex-discussion', 'install', '--home', root]);
-  for (const assistant of ['.codex', '.claude']) {
+  for (const assistant of ['.agents', '.claude']) {
     const cli = path.join(root, assistant, 'skills', 'claude-codex-discussion', 'dist', 'cli.cjs');
-    assert.equal(run([cli, '--version']).trim(), '2.0.0');
+    assert.equal(run([cli, '--version']).trim(), '2.1.0');
   }
   console.log('Packed npm install and both standalone runtimes verified');
 } finally { fs.rmSync(root, {recursive:true, force:true}); }

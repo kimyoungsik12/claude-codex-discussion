@@ -88,13 +88,26 @@ AI에게 아래 링크만 주어 설치를 맡길 수도 있습니다. 계정 �
 
 설치 후 새 AI 세션에서 Codex는 `$claude-codex-discussion`, Claude Code는 `/claude-codex-discussion`으로 호출하세요. 터미널 CLI에서도 동작합니다.
 
+## 원격 서버의 Codex + 내 PC의 Claude
+
+원격 작업은 **원격 계정의 스킬**을 검색합니다. PC에만 설치하면 원격에서 나타나지 않으므로 원격에도 설치하세요.
+
+1. 원격: `npx @youngsik1/claude-codex-discussion@latest install --target codex`
+2. 로컬: 아래 명령으로 로그인된 Claude를 SSH로 연결하고 프로세스를 유지합니다.
+
+```sh
+npx @youngsik1/claude-codex-discussion@latest connect --ssh devbox --provider claude --remote-cli /home/user/.agents/skills/claude-codex-discussion/dist/cli.cjs
+```
+
+로컬에 SSH 서버를 열거나 Claude 로그인 정보를 원격으로 복사하지 않습니다. 원격에서 설계·수정안을 주고받고 **파일 수정·테스트는 원격**에서 실행합니다. `--provider codex`로 반대 구성도 가능합니다. 로컬 PC가 꺼지거나 연결 프로세스가 끝나면 연결도 종료됩니다. 원격 Node 경로 지정 등은 [원격 연결 안내](skill/references/remote.md)를 참고하세요. 현재 원격 대상은 Linux/macOS 등 POSIX SSH 호스트이며, 로컬은 Windows·macOS·Linux를 지원합니다.
+
 ## 진단·업데이트·제거
 
 - `doctor`: 필요한 CLI 옵션 지원 확인. 로그인·실제 모델 호출 성공은 별도입니다. 오래된 CLI는 최신 모델을 거부할 수 있습니다.
 - `models`: 이번 실행에 전달할 저장된 모델·effort 확인.
 - `usage`: Codex 한도 갱신 및 Claude가 마지막으로 보고한 한도 확인. Claude 호출 없이 새 Claude 관측을 만들지는 않습니다.
 - 업데이트: 협업 실행이 끝난 뒤 설치 명령을 다시 실행합니다. 기존 스킬은 설정 폴더의 `skill-backups`에 보존됩니다.
-- 위치: `~/.codex/skills/claude-codex-discussion`, `~/.claude/skills/claude-codex-discussion`. CODEX_HOME / CLAUDE_CONFIG_DIR도 지원합니다.
+- 새 Codex 설치 위치: `~/.agents/skills/claude-codex-discussion`, `~/.claude/skills/claude-codex-discussion`. CODEX_HOME / CLAUDE_CONFIG_DIR도 지원합니다.
 - 이전 v1 Python 상태줄이 연결되어 있으면 그 연결만 Node 실행기로 이전하고 원래 상태줄 전달 설정을 유지합니다. 모델·로그인 설정은 변경하지 않습니다.
 - 제거: 스킬이 상태줄에 연결되어 있다면 백업을 참고해 해당 statusLine 설정만 복구한 뒤 스킬 폴더를 제거하세요. 로그·백업은 자동 삭제하지 않습니다.
 - Windows와 WSL은 별도 환경입니다. AI를 실행하는 쪽에 설치·로그인하세요.
