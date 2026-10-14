@@ -1,0 +1,23 @@
+{
+  ".gitattributes": "08a9b6e042a4481a2f94673836642990a02482af80dc9c2823922e8ddb75c4b1",
+  ".github/workflows/test.yml": "14326df83fee626f5c009988026286a4cffe4969834f9799acc35fee4a3cd6d9",
+  ".gitignore": "35bacff92ccd946cf4ae479c52f1f8b52b91e6a6417a6e78ebcabecef2c21834",
+  "AI_INSTALL.md": "79d93c98e9779c31fe149af70806344b062812fcb6e96dbfe2b409c2698f91e7",
+  "build_release.py": "2cd17a223e77254a7cde277f7c72016e6ee50aea2a42950b3a41caf4dc6f5bb3",
+  "install.cmd": "e0f632a4be559851e9d14e835e73d64363296adcb34a9415a4c30287b012230e",
+  "install.py": "f1fd8008d829ff371090d538b1f6e7434059b2cb177ee745ac391f767095404a",
+  "install.sh": "d4c471efff905df4724df8c2a8cf16bf1f5a7305cf2dc8c4b8c49ec41c06e204",
+  "README.md": "1532658d914dd3b5f55f772628b9a6e276f7b1bfcf31d64ac9a77034ccd27578",
+  "skill/agents/openai.yaml": "0ba03edc85aa1daf4f0b19b5eead5af18d4c09acb72e6cd82b66ef4d78f55e3f",
+  "skill/references/config.md": "793d6ceca9fb819c65f64bbd206b250d09f011275f21a14940d93a0ba115e406",
+  "skill/references/validation.md": "133e7f747cc7096d54a80652dc3f36e8ff8b8353c3b5bac4775e905f15445e09",
+  "skill/scripts/discuss.py": "9f8b8a437eab19ce9b8bc3dad197f3adb5f2f88767e52a4a8c22971cedab2861",
+  "skill/scripts/test_discuss.py": "3a0f85f8f9fa183e457abe14a08d83808a65933ea2668f4c66dec2567ebd507f",
+  "skill/scripts/test_usage.py": "e8cc44644f555e6fec31ffcbfe1e6713a1daf21b53a33328ec7b8ec310809942",
+  "skill/scripts/test_workflow.py": "68adbc31e21be5583e91b5e3d020b3c6b64f516d0afc6fe85189a6e844ee96ff",
+  "skill/scripts/usage.py": "3d012a0700535528ad47323087595ea8a0980cb56e7ab566e0637c9240c07629",
+  "skill/scripts/workflow.py": "3940bfe3867f8477c17eb93582e861b2121e0b090787302fdc21aab41f1b2968",
+  "skill/SKILL.md": "968c2be0e9b9d3a93533749ebaaf50760a892cc3b73efca7afb1ca15dc2311a8",
+  "test_install.py": "097d59591cba9e1b68b451de2104b306349852479719cd2cf2251074a57f20d6",
+  "TESTING.md": "531a438b1fb3b05ced62c4bb2f60ee774b4939bc6ebea61c9ee11de67fc00a43"
+}

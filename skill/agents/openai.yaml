@@ -1,0 +1,4 @@
+interface:
+  display_name: "Claude–Codex 자동 논의"
+  short_description: "양방향 설계 합의부터 사용량에 따른 구현 담당 선택·상호 코드 검토까지 자동화"
+  default_prompt: "Use $claude-codex-discussion to delegate design, agree with the other assistant, implement with the requested or quota-selected writer, and mutually review the result within my authorized scope."
