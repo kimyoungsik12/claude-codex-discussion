@@ -61,7 +61,7 @@ class WorkflowTests(unittest.TestCase):
 
     def test_end_to_end_feedback_and_two_reviews(self):
         with tempfile.TemporaryDirectory() as tmp:
-            repo, run, config = self.setup_run(Path(tmp))
+            repo, run, config = self.setup_run(Path(tmp).resolve())
             client = FakeClient(reject_first=True)
             with patch("workflow.invoke", return_value=(0, "checks passed", "")):
                 state = w.workflow(config, run, client)
@@ -74,7 +74,7 @@ class WorkflowTests(unittest.TestCase):
 
     def test_reverse_designer_and_explicit_codex_writer(self):
         with tempfile.TemporaryDirectory() as tmp:
-            repo, run, config = self.setup_run(Path(tmp))
+            repo, run, config = self.setup_run(Path(tmp).resolve())
             config.update(designer="claude", writer="codex")
             client = FakeClient()
             with patch("workflow.invoke", return_value=(0, "ok", "")):
@@ -86,7 +86,7 @@ class WorkflowTests(unittest.TestCase):
 
     def test_quota_failure_handoff_only_auto_with_known_headroom(self):
         with tempfile.TemporaryDirectory() as tmp:
-            repo, run, config = self.setup_run(Path(tmp))
+            repo, run, config = self.setup_run(Path(tmp).resolve())
             usage = Path(tmp) / "usage.json"
             usage.write_text(json.dumps({"codex": {"source": "test", "observed_at": w.time.time(),
                                                    "windows": [{"remaining_percent": 80}]}}))
@@ -98,7 +98,7 @@ class WorkflowTests(unittest.TestCase):
 
     def test_design_only_never_applies_and_failed_tests_never_complete(self):
         with tempfile.TemporaryDirectory() as tmp:
-            repo, run, config = self.setup_run(Path(tmp))
+            repo, run, config = self.setup_run(Path(tmp).resolve())
             before = (repo / "sample.py").read_bytes()
             config["mode"] = "design"
             state = w.workflow(config, run, FakeClient())
@@ -111,7 +111,7 @@ class WorkflowTests(unittest.TestCase):
 
     def test_scope_concurrency_and_approval_hash(self):
         with tempfile.TemporaryDirectory() as tmp:
-            repo, run, config = self.setup_run(Path(tmp))
+            repo, run, config = self.setup_run(Path(tmp).resolve())
             expected = w.collect(repo, ["sample.py"])
             with self.assertRaises(w.Halt):
                 w.apply_changes(repo, [{"path": "../escape", "content": "bad"}], config["write_files"], expected, run, 1)
