@@ -4,6 +4,14 @@ The skill is discovered on the host executing the task. Installing on a laptop d
 
 Install on the repository host with `npx @youngsik1/claude-codex-discussion@latest install --target codex`. Fresh Codex installs go into `~/.agents/skills/claude-codex-discussion`. Existing legacy installs or CODEX_HOME remain supported. Reload the remote session if needed. Node.js 22+ is required on both hosts. Each installed skill has `runtime.json` containing the absolute `node_path`; use it when Node is not on PATH. The app may install its own Codex binary without Node/npm.
 
+## Automatic first connection (2.2)
+
+Run `setup --ssh HOST --provider claude` on the authenticated local provider PC. One explicit SSH alias is the only initial connection input. With exactly one matching previously registered connection, `setup --provider claude` reuses it. Multiple or missing identities fail rather than guessing or probing every SSH host.
+
+Setup transfers only the packaged skill/runtime over strict authenticated SSH, bootstraps private Node when needed, installs the remote peer skill, installs a durable local provider skill outside npx caches, registers login startup and waits for the tunnel. No remote-cli or remote-node paths are needed. It preserves provider credentials and model settings; provider CLI installation/login is a separate prerequisite. An existing same-named host/provider connection is stopped and restarted. Do this when no workflow is actively using that connection.
+
+The remote-only assistant cannot discover an unknown laptop. Ask the local assistant to run setup once. The SSH target account must be authorized for user-directory installation; setup does not enter Docker containers or change system packages. For existing configured users, both sides use the installed version transferred from the invoking package rather than a different npm version.
+
 ## Connect without copying login credentials
 
 Run on the machine already authenticated to the provider (normally the local laptop). The repository host needs SSH access from that machine and the installed skill. This helper supports POSIX SSH hosts; the local provider host can be Windows, macOS or Linux.
@@ -14,7 +22,7 @@ node /absolute/local/skill/dist/cli.cjs connect --ssh devbox --provider claude -
 
 Omit `--remote-node` if `node` is in the remote noninteractive PATH. Use the repository host's own paths, not the local paths. Use `--provider codex` for the reverse arrangement. `--remote-port` defaults to 47831; use a distinct unused port for each simultaneous connection.
 
-The command starts a loopback-only local provider service, registers a random connection token over authenticated SSH stdin, and maintains reverse port forwarding. It prints `bridge_connected` only after SSH confirms setup. Keep the process running; closing it, sleeping the laptop or losing SSH makes the provider unavailable. Restart `connect` to replace the session token and reconnect. It is not an automatically installed startup service. Use the host's process tools to run it in the background when the user requests a working connection; on Windows hide the helper window. Preserve its PID/log location for stopping it.
+The command starts a loopback-only local provider service, registers a random connection token over authenticated SSH stdin, and maintains reverse port forwarding. It prints `bridge_connected` only after SSH confirms setup. Keep the process running; closing it, sleeping the laptop or losing SSH makes the provider unavailable. Restart `connect` to replace the session token and reconnect. The one-shot `connect` command does not install startup integration. For explicitly requested persistent connectivity, use `connect-enable` below. Use the host's process tools to run it in the background when the user requests a working connection; on Windows hide the helper window. Preserve its PID/log location for stopping it.
 
 Run the installed skill's `doctor`, `models` and `usage` on the repository host after connecting. Connection configuration lives in `~/.codex/discussions/connections.json`; token files stay outside the repository with user-only permissions on POSIX. Never print or commit tokens. To disconnect permanently, stop the local helper and remove only the configured provider entry and its token file.
 
@@ -33,3 +41,21 @@ Optional per-task `providers` mapping overrides the saved connection:
 ```
 
 Only loopback HTTP endpoints are accepted; encryption and host authentication are provided by SSH. Reconnecting rotates the token. There is no automatic retry of an interrupted model call or implementation.
+
+## Automatic login startup and reconnection (2.2)
+
+On the local provider host, after verifying the SSH alias and remote paths:
+
+```sh
+node /absolute/installed/skill/dist/cli.cjs connect-enable --name devbox --ssh devbox --provider claude --remote-cli /home/user/.agents/skills/claude-codex-discussion/dist/cli.cjs --remote-node /absolute/remote/node
+node /absolute/installed/skill/dist/cli.cjs connect-status --name devbox
+node /absolute/installed/skill/dist/cli.cjs connect-disable --name devbox
+```
+
+`connect-enable` starts a hidden supervisor now and registers login startup: Windows Startup VBS, macOS LaunchAgent, or Linux desktop autostart. Linux headless SSH login is not a desktop login; start `connect-watch --config <connection.json>` under your existing process manager there. Paths are absolute and provider/SSH executable directories are captured. Use an installed skill path, not an ephemeral npx cache, for durable startup.
+
+Only the connection is retried, with 1/2/4/.../60-second bounded backoff. No failed model call, edits, or workflow is automatically replayed. SSH keepalive detects a dead connection; network outages may take about 45 seconds to be detected, followed by backoff and SSH setup. Authentication or host-key failures remain failures; no credentials or host checks are bypassed. The machine must be awake and the user logged in. This does not install a boot-time system service or guarantee recovery if the supervisor itself is forcibly killed.
+
+Per-connection configuration, bounded event logs and status are under `~/.codex/discussions/bridges/<name>/`. `connected` is the last transport event, not proof of provider authentication. Verify with remote `doctor` and a small real provider request. An OS-owned named-pipe (Windows) or loopback socket lock prevents multiple supervisors for the same SSH alias/provider; a conflicting lock port is reported rather than bypassed. Use one connection per remote account/provider; different aliases to the same account are not deduplicated. Port-forward setup must succeed before updating remote authentication, so a port collision cannot invalidate an existing connection.
+
+`connect-disable` removes this named login entry and requests stop; the supervisor shuts its child down. It leaves remote provider routing configured but unavailable, rather than silently falling back to another account. Re-enable with the same arguments to resume. Do not change personal model settings during connectivity setup; test overrides should be stated explicitly.

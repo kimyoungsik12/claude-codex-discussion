@@ -1,6 +1,6 @@
 {
   "name": "@youngsik1/claude-codex-discussion",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Claude and Codex design agreement, quota-aware implementation and mutual review",
   "type": "commonjs",
   "bin": {
@@ -12,7 +12,8 @@
     "skill/agents",
     "skill/references",
     "AI_INSTALL.md",
-    "TESTING.md"
+    "TESTING.md",
+    "bootstrap"
   ],
   "engines": {
     "node": ">=22"
@@ -27,7 +28,8 @@
     "typecheck": "tsc --noEmit",
     "test": "npm run build && node --test tests/*.test.cjs",
     "prepack": "npm run typecheck && npm run build",
-    "test:package": "node scripts/smoke-package.cjs"
+    "test:package": "node scripts/smoke-package.cjs",
+    "test:bootstrap": "node scripts/smoke-bootstrap.cjs"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

@@ -29,8 +29,11 @@ export function install(packageRoot:string,userHome=home(),target='both',env=pro
       try {
         fs.mkdirSync(stage);
         for(const entry of ['SKILL.md','agents','references'])if(fs.existsSync(path.join(source,entry)))fs.cpSync(path.join(source,entry),path.join(stage,entry),{recursive:true});
+        if(fs.existsSync(path.join(packageRoot,'bootstrap')))fs.cpSync(path.join(packageRoot,'bootstrap'),path.join(stage,'bootstrap'),{recursive:true});
         fs.mkdirSync(path.join(stage,'dist'));fs.copyFileSync(runtime,path.join(stage,'dist','cli.cjs'));fs.chmodSync(path.join(stage,'dist','cli.cjs'),0o755);
         const prefixes=[path.dirname(process.execPath)];
+        const previousRuntime=path.join(dest,'runtime.json');
+        if(fs.existsSync(previousRuntime))try{for(const p of readJSON(previousRuntime).path_prefixes??[])if(typeof p==='string'&&path.isAbsolute(p)&&fs.existsSync(p))prefixes.push(p);}catch{}
         for(const provider of ['claude','codex']){const exe=findExecutable(provider);if(exe)prefixes.push(path.dirname(exe));}
         save(path.join(stage,'runtime.json'),{node_path:process.execPath,platform:process.platform,path_prefixes:[...new Set(prefixes)]});
         if(fs.existsSync(dest)){backup=path.join(path.dirname(path.dirname(dest)),'skill-backups',skillName+'-'+randomUUID());fs.mkdirSync(path.dirname(backup),{recursive:true});fs.renameSync(dest,backup);}

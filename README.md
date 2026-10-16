@@ -90,16 +90,17 @@ AI에게 아래 링크만 주어 설치를 맡길 수도 있습니다. 계정 �
 
 ## 원격 서버의 Codex + 내 PC의 Claude
 
-원격 작업은 **원격 계정의 스킬**을 검색합니다. PC에만 설치하면 원격에서 나타나지 않으므로 원격에도 설치하세요.
-
-1. 원격: `npx @youngsik1/claude-codex-discussion@latest install --target codex`
-2. 로컬: 아래 명령으로 로그인된 Claude를 SSH로 연결하고 프로세스를 유지합니다.
+로컬 PC에서 SSH 별칭 하나로 최초 설치와 연결을 자동 설정합니다.
 
 ```sh
-npx @youngsik1/claude-codex-discussion@latest connect --ssh devbox --provider claude --remote-cli /home/user/.agents/skills/claude-codex-discussion/dist/cli.cjs
+npx --yes @youngsik1/claude-codex-discussion@2.2.0 setup --ssh devbox --provider claude
 ```
 
-로컬에 SSH 서버를 열거나 Claude 로그인 정보를 원격으로 복사하지 않습니다. 원격에서 설계·수정안을 주고받고 **파일 수정·테스트는 원격**에서 실행합니다. `--provider codex`로 반대 구성도 가능합니다. 로컬 PC가 꺼지거나 연결 프로세스가 끝나면 연결도 종료됩니다. 원격 Node 경로 지정 등은 [원격 연결 안내](skill/references/remote.md)를 참고하세요. 현재 원격 대상은 Linux/macOS 등 POSIX SSH 호스트이며, 로컬은 Windows·macOS·Linux를 지원합니다.
+원격 Node.js 확인·사용자 폴더 설치, 원격 스킬 설치, 로컬 영구 설치, 연결 인증 등록, 로그인 시 자동 실행, 끊김 후 재연결까지 처리합니다. 원격 경로를 직접 입력할 필요가 없습니다. 등록된 서버가 하나뿐이면 다음부터 `setup --provider claude`만으로 복구할 수 있습니다.
+
+로컬에는 해당 AI CLI 로그인과 기존 SSH 접근 권한이 필요합니다. `--provider codex`로 반대 구성을 지정합니다. 계정 인증 파일은 복사하지 않고, 프로젝트 파일 수정·테스트는 원격에서 수행합니다. 로컬 PC가 켜져 있고 로그인되어 있어야 합니다. **원격 세션만으로 미등록 PC를 발견하거나 켤 수는 없습니다.** 로컬 AI에게 “이 서버에 setup해줘”라고 요청하는 것이 최초 연결의 시작점입니다.
+
+로컬은 Windows·macOS·Linux, 원격은 POSIX SSH 호스트를 지원합니다. 컨테이너를 쓰면 SSH가 실제로 실행되는 호스트/계정에 설치됩니다. 컨테이너 경계를 자동으로 넘거나 운영 컨테이너에 들어가 설치하지 않습니다. [원격 연결 안내](skill/references/remote.md)를 참고하세요.
 
 ## 진단·업데이트·제거
 
@@ -121,3 +122,13 @@ npx @youngsik1/claude-codex-discussion@latest connect --ssh devbox --provider cl
 사용량은 실제 CLI 이벤트에서 수집하며 없거나 오래되면 추정하지 않습니다. 양쪽 서비스가 응답해야 상호 리뷰까지 끝낼 수 있습니다. 파일별 원자적 쓰기와 제한된 재시도를 제공하며, 무한 작업이나 중단 후 자동 재개는 아닙니다.
 
 [검증 범위](TESTING.md) · [CI](https://github.com/kimyoungsik12/claude-codex-discussion/actions) · [npm](https://www.npmjs.com/package/@youngsik1/claude-codex-discussion)
+
+
+### 자동 연결 유지 (2.2)
+
+로컬 제공자 PC에서 설치된 스킬의 CLI로 `connect-enable --name devbox`를 실행하면, 기존 `connect`와 같은 SSH/remote-cli/provider 옵션을 저장하고 로그인 시 자동 시작합니다. 연결 종료 시 1초부터 최대 60초 간격으로 재연결하며 AI 작업 자체는 재실행하지 않습니다. `connect-status --name devbox`로 마지막 연결 상태를 보고, `connect-disable --name devbox`로 자동 시작과 연결을 중지합니다. 상세 명령과 OS별 조건은 [원격 연결 안내](skill/references/remote.md)를 참고하세요.
+
+
+### Node.js가 없는 환경 (2.2)
+
+사용자 폴더에 Node.js를 자동 설치하는 진입점을 추가했습니다. 패키지/저장소에서 Windows는 `./bootstrap/install.ps1`, macOS·Ubuntu는 `sh ./bootstrap/install.sh`를 실행하면 됩니다. 기존 Node.js 22 이상은 재사용하고, 없으면 공식 배포본의 SHA-256을 확인한 뒤 사용자 폴더에 설치합니다. 시스템 패키지나 영구 PATH를 바꾸지 않으며 Python도 필요 없습니다. [AI 설치 안내](AI_INSTALL.md)에 옵션과 검증 범위를 정리했습니다.
