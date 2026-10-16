@@ -25,3 +25,14 @@ test('native shell executes SSH hook with paths containing spaces',t=>{
  const win=process.platform==='win32';const r=spawnSync(win?'cmd.exe':'sh',win?['/d','/c',command]:['-c',command],{env:{...process.env,PAIR_HOOK_TEST:out},encoding:'utf8',windowsVerbatimArguments:win});
  assert.equal(r.status,0,r.stderr);assert.deepEqual(JSON.parse(fs.readFileSync(out)),['ssh-login','--ssh','devbox','--provider','claude','--remote-port','1122']);
 });
+
+test('Windows supervisor launch does not keep caller output pipe open',{skip:process.platform!=='win32'},t=>{
+ const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),{spawnSync}=require('node:child_process');
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'pair-detach-'));
+ t.after(()=>{try{process.kill(JSON.parse(fs.readFileSync(path.join(dir,'status.json'))).pid);}catch{}fs.rmSync(dir,{recursive:true,force:true});});
+ const cli=path.join(dir,'fake.cjs'),config=path.join(dir,'connection.json'),vbs=path.join(dir,'launch.vbs');
+ fs.writeFileSync(cli,"const fs=require('node:fs'),p=require('node:path');fs.writeFileSync(p.join(__dirname,'status.json'),JSON.stringify({at:new Date().toISOString(),pid:process.pid}));setTimeout(()=>{},30000);");
+ fs.writeFileSync(vbs,w.startupFile('detach-test',cli,config).content);fs.writeFileSync(path.join(dir,'startup.json'),JSON.stringify({file:vbs}));
+ const script='require('+JSON.stringify(path.resolve(__dirname,'../dist/index.cjs'))+').startSupervisor('+JSON.stringify(dir)+','+JSON.stringify(cli)+').then(pid=>console.log(pid))';
+ const r=spawnSync(process.execPath,['-e',script],{encoding:'utf8',timeout:12000});assert.equal(r.status,0,r.stderr||String(r.error));assert.ok(Number(r.stdout.trim())>0);
+});

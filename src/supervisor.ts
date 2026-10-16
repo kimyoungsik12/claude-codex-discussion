@@ -75,8 +75,16 @@ export function connectionDirectory(name:string) {
   if(!/^[a-z0-9][a-z0-9-]{0,63}$/.test(name))throw new Halt('Use a lowercase connection name');
   return path.join(dataRoot(),'bridges',name);
 }
-export function startSupervisor(dir:string,cli:string) {
+export async function startSupervisor(dir:string,cli:string) {
   fs.rmSync(path.join(dir,'stop'),{force:true});
+  if(process.platform==='win32'){
+    // WSH detaches inherited SSH pipe handles, unlike directly spawned Node grandchildren.
+    const started=Date.now();const startup=readJSON(path.join(dir,'startup.json'));
+    const launcher=spawn('wscript.exe',[startup.file],{detached:true,windowsHide:true,stdio:'ignore'});launcher.unref();
+    let launchError:Error|undefined;launcher.on('error',e=>{launchError=e;});
+    while(Date.now()-started<10000){if(launchError)throw launchError;try{const s=readJSON(path.join(dir,'status.json'));if(Date.parse(s.at)>=started&&Number.isInteger(s.pid))return s.pid;}catch{}await new Promise(r=>setTimeout(r,100));}
+    throw new Halt('Windows startup launcher did not report readiness');
+  }
   const child=spawn(process.execPath,[cli,'connect-watch','--config',path.join(dir,'connection.json')],{cwd:dir,detached:true,windowsHide:true,stdio:'ignore'});child.unref();return child.pid;
 }
 
@@ -109,7 +117,7 @@ export async function enableConnection(name:string,options:ConnectOptions,cli:st
   fs.mkdirSync(path.dirname(startup.file),{recursive:true});fs.writeFileSync(startup.file,startup.content,{mode:0o600});
   save(path.join(dir,'startup.json'),{file:startup.file});
   await new Promise<void>(r=>guard.close(()=>r()));
-  return {directory:dir,startup_file:startup.file,pid:startSupervisor(dir,cli)};
+  return {directory:dir,startup_file:startup.file,pid:await startSupervisor(dir,cli)};
   } finally {if(guard.listening)guard.close();}
 }
 export function disableConnection(name:string) {
