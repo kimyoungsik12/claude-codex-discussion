@@ -4,6 +4,7 @@ import os from 'node:os';
 import {randomUUID} from 'node:crypto';
 import {dataRoot,findExecutable,Halt,invoke,Provider,providerCommand,readJSON} from './core';
 import {install} from './install';
+import {currentRemoteContext,discoverRemote} from './discovery';
 import {connectionDirectory,disableConnection,enableConnection,validateConnection} from './supervisor';
 
 export function setupPayload(root:string):Record<string,string> {
@@ -22,7 +23,7 @@ export function setupPayload(root:string):Record<string,string> {
 
 export function remoteSetupScript(payload:Record<string,string>,target:Provider):string {
   if(!['claude','codex'].includes(target))throw new Halt('Invalid remote target');
-  const bootstrap=Buffer.from(payload['bootstrap/install.sh'],'base64').toString('utf8');
+  const bootstrap=Buffer.from(payload['bootstrap/install.sh'],'base64').toString('utf8').replace(/\r\n/g,'\n');
   const delimiter='PAIR_'+randomUUID().replaceAll('-','');
   return `set -eu
 umask 077
@@ -56,8 +57,11 @@ export function knownConnection(host?:string,provider:Provider='claude',root=dat
   return {host:host??matches[0].host,previous:matches.length===1?matches[0]:undefined};
 }
 
-export async function setupConnection(root:string,args:{host?:string;name?:string;provider:Provider;remotePort?:number}) {
-  const known=knownConnection(args.host,args.provider);
+export async function setupConnection(root:string,args:{host?:string;name?:string;provider:Provider;remotePort?:number;contextFile?:string}) {
+  const context=args.host?undefined:currentRemoteContext(args.contextFile);
+  const discovery=context?await discoverRemote(context):undefined;
+  if(!args.host&&!context&&process.env.SSH_CONNECTION)throw new Halt('Running on the remote host: use existing bridge doctor, or relay current host context to the local provider agent');
+  const known=knownConnection(args.host??discovery?.host,args.provider);
   const name=args.name??known.previous?.name??known.host.toLowerCase().replace(/[^a-z0-9-]/g,'-');
   const existingFile=path.join(connectionDirectory(name),'connection.json');
   if(fs.existsSync(existingFile)){const existing=readJSON(existingFile);if(existing.host!==known.host||existing.provider!==args.provider)throw new Halt('Connection name belongs to another host/provider');}
@@ -94,7 +98,7 @@ export async function setupConnection(root:string,args:{host?:string;name?:strin
   const enabled=await enableConnection(name,{host:known.host,provider:args.provider,remoteNode:remote.remoteNode,remoteCli:remote.remoteCli,remotePort:args.remotePort??known.previous?.remotePort??47831},localCli);
   const until=Date.now()+45000;
   while(Date.now()<until){
-    try{const status=readJSON(path.join(dir,'status.json'));if(status.pid===enabled.pid&&status.event==='connected')return {...enabled,host:known.host,remote,status:'connected'};}catch{}
+    try{const status=readJSON(path.join(dir,'status.json'));if(status.pid===enabled.pid&&status.event==='connected')return {...enabled,host:known.host,discovery:discovery?.source??(args.host?'explicit':'saved_single_connection'),remote,status:'connected'};}catch{}
     await new Promise(r=>setTimeout(r,250));
   }
   throw new Halt('Setup installed; connection is still retrying. Inspect connect-status --name '+name);

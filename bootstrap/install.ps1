@@ -77,7 +77,7 @@ try {
   } else {
     $npx = Get-Command npx.cmd -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
     if (-not $npx) { throw 'Node exists but npm/npx is missing; retry with -Private' }
-    & $npx.Source --yes '@youngsik1/claude-codex-discussion@2.2.0' install --target $Target
+    & $npx.Source --yes '@youngsik1/claude-codex-discussion@2.2.1' install --target $Target
   }
   if ($LASTEXITCODE -ne 0) { throw 'Skill installation failed' }
 } finally { $env:PATH = $oldPath }

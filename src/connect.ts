@@ -10,7 +10,7 @@ export function shellQuote(value:string) {
 export type ConnectOptions={host:string;provider:Provider;remoteNode:string;remoteCli:string;remotePort:number};
 export async function connect(options:ConnectOptions) {
   validateConnection(options);
-  if(!/^[a-zA-Z0-9_@.\-]+$/.test(options.host)||options.host.startsWith('-'))throw new Halt('Use an SSH host alias');
+  if(!/^[\p{L}\p{N}_@.\-]+$/u.test(options.host)||options.host.startsWith('-'))throw new Halt('Use an SSH host alias');
   if(!Number.isInteger(options.remotePort)||options.remotePort<1024||options.remotePort>65535)throw new Halt('Remote port must be 1024..65535');
   const ssh=findExecutable('ssh');if(!ssh)throw new Halt('OpenSSH client is required');
   const bridge=await startBridge({provider:options.provider});

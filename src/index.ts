@@ -7,3 +7,5 @@ export * from './bridge';
 
 export * from './supervisor';
 export * from './setup';
+
+export * from './discovery';

@@ -7,7 +7,7 @@ import {dataRoot, Halt, killTree, readJSON, save, findExecutable, home} from './
 import type {ConnectOptions} from './connect';
 
 export function validateConnection(o:ConnectOptions) {
-  if(!/^[a-zA-Z0-9_@.\-]+$/.test(o.host)||o.host.startsWith('-'))throw new Halt('Use an SSH host alias');
+  if(!/^[\p{L}\p{N}_@.\-]+$/u.test(o.host)||o.host.startsWith('-'))throw new Halt('Use an SSH host alias');
   if(!['claude','codex'].includes(o.provider))throw new Halt('Invalid provider');
   if(!Number.isInteger(o.remotePort)||o.remotePort<1024||o.remotePort>65535)throw new Halt('Invalid remote port');
   for(const p of [o.remoteCli,o.remoteNode])if(typeof p!=='string'||!p||/[\r\n\0]/.test(p))throw new Halt('Invalid remote path');

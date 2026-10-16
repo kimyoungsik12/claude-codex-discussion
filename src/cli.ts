@@ -7,6 +7,7 @@ import {startWorkflow} from './workflow';
 import {routedUsage,routedSettings,configureBridge} from './bridge';
 import {connect} from './connect';
 import {setupConnection} from './setup';
+import {currentRemoteContext,discoverRemote} from './discovery';
 import {supervise,enableConnection,disableConnection,connectionDirectory} from './supervisor';
 
 async function main() {
@@ -16,10 +17,10 @@ async function main() {
     if(Array.isArray(runtime.path_prefixes)&&runtime.path_prefixes.every((p:unknown)=>typeof p==='string'&&path.isAbsolute(p)))
       process.env.PATH=[...runtime.path_prefixes,process.env.PATH||''].join(path.delimiter);
   }
-  const {positionals,values}=parseArgs({allowPositionals:true,options:{name:{type:'string'},help:{type:'boolean',short:'h'},version:{type:'boolean',short:'v'},target:{type:'string'},home:{type:'string'},config:{type:'string'},'run-dir':{type:'string'},provider:{type:'string'},url:{type:'string'},'token-stdin':{type:'boolean'},ssh:{type:'string'},'remote-node':{type:'string'},'remote-cli':{type:'string'},'remote-port':{type:'string'}}});
-  if(values.version){console.log('2.2.0');return;}
+  const {positionals,values}=parseArgs({allowPositionals:true,options:{context:{type:'string'},name:{type:'string'},help:{type:'boolean',short:'h'},version:{type:'boolean',short:'v'},target:{type:'string'},home:{type:'string'},config:{type:'string'},'run-dir':{type:'string'},provider:{type:'string'},url:{type:'string'},'token-stdin':{type:'boolean'},ssh:{type:'string'},'remote-node':{type:'string'},'remote-cli':{type:'string'},'remote-port':{type:'string'}}});
+  if(values.version){console.log('2.2.1');return;}
   const action=positionals[0];
-  if(values.help||!action){console.log('claude-codex-discussion 2.2.0\nCommands:\n  install [--target both|codex|claude] [--home PATH]\n  setup [--ssh HOST] [--provider claude|codex] [--name NAME]\n  connect --ssh HOST --provider claude --remote-cli PATH [--remote-node PATH]\n  connect-enable --name NAME --ssh HOST --provider claude --remote-cli PATH [--remote-node PATH]\n  connect-status --name NAME\n  connect-disable --name NAME\n  doctor\n  models\n  usage\n  run --config task.json [--run-dir PATH]\n\nRequires Node.js 22+. No Python required.');return;}
+  if(values.help||!action){console.log('claude-codex-discussion 2.2.1\nCommands:\n  install [--target both|codex|claude] [--home PATH]\n  discover [--context FILE]\n  setup [--context FILE] [--ssh HOST] [--provider claude|codex] [--name NAME]\n  connect --ssh HOST --provider claude --remote-cli PATH [--remote-node PATH]\n  connect-enable --name NAME --ssh HOST --provider claude --remote-cli PATH [--remote-node PATH]\n  connect-status --name NAME\n  connect-disable --name NAME\n  doctor\n  models\n  usage\n  run --config task.json [--run-dir PATH]\n\nRequires Node.js 22+. No Python required.');return;}
   if(positionals.length!==1)throw new Halt('Unexpected arguments');
   if(action==='install')install(path.resolve(__dirname,'..'),values.home??home(),values.target??'both');
   else if(action==='doctor')process.exitCode=await doctor()?0:2;
@@ -29,7 +30,8 @@ async function main() {
     if(!values['token-stdin']||!values.provider||!values.url)throw new Halt('provider, url and token-stdin required');
     console.log(JSON.stringify(configureBridge(values.provider,values.url,fs.readFileSync(0,'utf8').trim())));
   }
-  else if(action==='setup'){console.log(JSON.stringify(await setupConnection(path.resolve(__dirname,'..'),{host:values.ssh,name:values.name,provider:(values.provider??'claude') as Provider,remotePort:values['remote-port']?Number(values['remote-port']):undefined})));}
+  else if(action==='discover'){const context=currentRemoteContext(values.context);if(!context)throw new Halt('No current remote context; agent must collect app project or remote workspace metadata');console.log(JSON.stringify(await discoverRemote(context)));}
+  else if(action==='setup'){console.log(JSON.stringify(await setupConnection(path.resolve(__dirname,'..'),{host:values.ssh,contextFile:values.context,name:values.name,provider:(values.provider??'claude') as Provider,remotePort:values['remote-port']?Number(values['remote-port']):undefined})));}
   else if(action==='connect-watch'){
     if(!values.config)throw new Halt('--config required');
     await supervise(path.resolve(values.config),__filename);

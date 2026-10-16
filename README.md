@@ -93,7 +93,7 @@ AI에게 아래 링크만 주어 설치를 맡길 수도 있습니다. 계정 �
 로컬 PC에서 SSH 별칭 하나로 최초 설치와 연결을 자동 설정합니다.
 
 ```sh
-npx --yes @youngsik1/claude-codex-discussion@2.2.0 setup --ssh devbox --provider claude
+npx --yes @youngsik1/claude-codex-discussion@2.2.1 setup --ssh devbox --provider claude
 ```
 
 원격 Node.js 확인·사용자 폴더 설치, 원격 스킬 설치, 로컬 영구 설치, 연결 인증 등록, 로그인 시 자동 실행, 끊김 후 재연결까지 처리합니다. 원격 경로를 직접 입력할 필요가 없습니다. 등록된 서버가 하나뿐이면 다음부터 `setup --provider claude`만으로 복구할 수 있습니다.
@@ -132,3 +132,8 @@ npx --yes @youngsik1/claude-codex-discussion@2.2.0 setup --ssh devbox --provider
 ### Node.js가 없는 환경 (2.2)
 
 사용자 폴더에 Node.js를 자동 설치하는 진입점을 추가했습니다. 패키지/저장소에서 Windows는 `./bootstrap/install.ps1`, macOS·Ubuntu는 `sh ./bootstrap/install.sh`를 실행하면 됩니다. 기존 Node.js 22 이상은 재사용하고, 없으면 공식 배포본의 SHA-256을 확인한 뒤 사용자 폴더에 설치합니다. 시스템 패키지나 영구 PATH를 바꾸지 않으며 Python도 필요 없습니다. [AI 설치 안내](AI_INSTALL.md)에 옵션과 검증 범위를 정리했습니다.
+
+
+### Current remote task discovery (2.2.1)
+
+The skill now collects the current app project host ID or editor remote workspace context before asking for an SSH alias. `setup` accepts AI-collected `--context FILE` metadata and resolves hostname/port/user through local SSH configuration. Project labels are never assumed to be SSH aliases. Duplicate equivalent aliases are deterministic; conflicting endpoints stop without connecting the wrong server. The helper cannot read app-only metadata directly; the invoking AI uses its available tools, then starts setup on the local provider host. An isolated remote session still needs an existing channel to execute on the local PC.

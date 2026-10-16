@@ -1,3 +1,10 @@
+# v2.2.1 current-task discovery verification
+
+- Five new tests cover app host ID vs misleading project labels, endpoint port/account matching, conflicting context rejection, equivalent aliases vs different proxy routes, editor remote URIs/Unicode and SSH Include cycles.
+- Local Windows: 45 passed, one POSIX-only provisioning test skipped; typecheck, packaged install and skill validation passed.
+- Actual app project hostId resolved to 11_webserver. Independently, hostname/port/user matched the same alias through local ssh -G. Setup using app-derived context established the live bridge without a user-selected SSH alias. The context file was collected/written by the agent, not the user.
+- Discovery reads only local configuration. It does not scan servers or infer identity from repository remotes. App metadata collection requires the invoking agent's tools; an isolated remote session still cannot launch a disconnected local provider PC.
+
 # v2.2.0 verification (2026-10-16)
 
 - Automatic `setup --ssh HOST --provider claude` discovered the remote Node and skill locations, installed both ends, registered Windows login startup, and established the authenticated reverse SSH tunnel on the existing Linux host. No remote paths were supplied.
