@@ -1,6 +1,5 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import {spawn} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {dataRoot,home,Halt,Provider,findExecutable,invoke,save,readJSON,providerCommand} from './core';
 import {sshAliases,validAlias} from './discovery';
@@ -55,19 +54,22 @@ export async function installLaptop(root:string,provider:Provider) {
   for(const alias of Object.keys(hosts)){const r=await invoke([ssh,'-G',alias],'',process.cwd(),10);if(r.exit_code===0&&/^permitlocalcommand yes$/m.test(r.stdout)&&r.stdout.includes('ssh-login'))effective.push(alias);else skipped.push(alias);}
   return {installed:true,registered_hosts:effective,skipped_hosts:skipped,hook,flow:'ordinary SSH -> remote skill -> local provider'};
 }
-export function loginStart(alias:string,provider:Provider,port:number,cli:string) {
+export async function loginStart(alias:string,provider:Provider,port:number,cli:string) {
   const cfg=readJSON(path.join(dataRoot(),'laptop/hosts.json'));
   if(!validAlias(alias)||cfg.provider!==provider||cfg.hosts[alias]?.port!==port)throw new Halt('SSH endpoint override not registered for laptop bridge');
   const account=cfg.providerEnvironment??{};
   for(const [key,value] of Object.entries(account)){if(key!==(provider==='claude'?'CLAUDE_CONFIG_DIR':'CODEX_HOME')||typeof value!=='string'||!path.isAbsolute(value))throw new Halt('Invalid saved provider environment');}
-  const child=spawn(process.execPath,[cli,'ssh-bootstrap','--ssh',alias,'--provider',provider],{env:{...process.env,...account},detached:true,windowsHide:true,stdio:'ignore'});child.unref();
+  Object.assign(process.env,account);
+  // Finish first provisioning before the user's remote shell starts, so Codex sees the skill immediately.
+  await loginBootstrap(path.resolve(path.dirname(cli),'..'),alias,provider);
 }
 export async function loginBootstrap(root:string,alias:string,provider:Provider) {
   const cfg=readJSON(path.join(dataRoot(),'laptop/hosts.json'));
   if(!cfg.hosts[alias]||cfg.provider!==provider)throw new Halt('Unregistered SSH destination');
   const dir=path.join(dataRoot(),'laptop');
   const options={host:alias+'-login-bootstrap',provider,remotePort:47831,remoteNode:'node',remoteCli:'auto'};
-  let lock;try{lock=await acquireConnectionLock(options);}catch{return;}
+  let lock;const deadline=Date.now()+480000;
+  while(!lock){try{lock=await acquireConnectionLock(options);}catch{if(Date.now()>deadline)throw new Halt('Another login setup did not finish');await new Promise(r=>setTimeout(r,500));}}
   const log=path.join(dir,'last-'+createHash('sha256').update(alias).digest('hex').slice(0,12)+'.json');
   try{
     const known=knownConnection(alias,provider);
