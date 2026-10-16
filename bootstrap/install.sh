@@ -75,5 +75,5 @@ if [ -n "$package_root" ]; then
   "$node" "$package_root/dist/cli.cjs" install --target "$target"
 else
   command -v npx >/dev/null 2>&1 || { echo 'Node exists but npm/npx is missing; retry with --private' >&2; exit 2; }
-  npx --yes @youngsik1/claude-codex-discussion@2.2.1 install --target "$target"
+  npx --yes @youngsik1/claude-codex-discussion@2.3.0 install --target "$target"
 fi

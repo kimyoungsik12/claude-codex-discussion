@@ -1,5 +1,20 @@
 # Claude–Codex 함께 작업하기
 
+## Laptop once, then ordinary SSH (2.3.0)
+
+On the laptop with Claude already signed in, run once:
+
+```sh
+npx --yes @youngsik1/claude-codex-discussion@2.3.0 install-laptop --provider claude
+```
+
+Then SSH normally, start Codex on the server, and invoke the discussion skill. No per-server setup command or local terminal action is needed for registered aliases. The SSH login hook launches a hidden local helper; it provisions the remote skill/private Node and starts the authenticated bridge. Remote `wait-bridge` and `run` wait for readiness. Claude is never installed on the server. Only login/setup runs automatically; model work starts when the skill is invoked.
+
+The hook applies to existing explicit aliases in the laptop's OpenSSH config; rerun install-laptop after adding aliases. It preserves existing user LocalCommand settings and reports skipped aliases. Alternate -F configs, custom LocalCommand/PermitLocalCommand=no, non-OpenSSH clients and changed host/user/port overrides may bypass it. Existing host-key/SSH and provider authentication must work non-interactively for the helper. Model sandbox must allow loopback bridge requests, the provider API and writes to its own CLI runtime directory (Codex typically ~/.codex); network-disabled Codex shells cannot use the bridge. No sandbox permissions are changed by installation.
+
+The background connector can outlive SSH logout and reconnects transport only, never replays model work. `connect-disable --name NAME` stops a named connector; `uninstall-laptop` removes the owned SSH login hook (existing connectors are stopped separately). The SSH config is backed up before changes. Remote readiness waits up to eight minutes to cover first-time private Node installation; failures remain explicit. Multiple laptops targeting the same remote port are not automatically merged.
+
+
 **Claude와 Codex가 설계를 논의하고, 사용량에 맞춰 구현을 나눈 뒤, 결과를 서로 검토하는 스킬입니다.**
 
 두 AI의 답변을 사용자가 복사해서 전달할 필요 없이, 한 번의 요청으로 **설계 → 합의 → 구현 → 테스트 → 상호 리뷰**를 진행합니다. Claude 또는 Codex 어느 쪽에서든 시작할 수 있습니다.
@@ -93,7 +108,7 @@ AI에게 아래 링크만 주어 설치를 맡길 수도 있습니다. 계정 �
 로컬 PC에서 SSH 별칭 하나로 최초 설치와 연결을 자동 설정합니다.
 
 ```sh
-npx --yes @youngsik1/claude-codex-discussion@2.2.1 setup --ssh devbox --provider claude
+npx --yes @youngsik1/claude-codex-discussion@2.3.0 setup --ssh devbox --provider claude
 ```
 
 원격 Node.js 확인·사용자 폴더 설치, 원격 스킬 설치, 로컬 영구 설치, 연결 인증 등록, 로그인 시 자동 실행, 끊김 후 재연결까지 처리합니다. 원격 경로를 직접 입력할 필요가 없습니다. 등록된 서버가 하나뿐이면 다음부터 `setup --provider claude`만으로 복구할 수 있습니다.
@@ -134,6 +149,6 @@ npx --yes @youngsik1/claude-codex-discussion@2.2.1 setup --ssh devbox --provider
 사용자 폴더에 Node.js를 자동 설치하는 진입점을 추가했습니다. 패키지/저장소에서 Windows는 `./bootstrap/install.ps1`, macOS·Ubuntu는 `sh ./bootstrap/install.sh`를 실행하면 됩니다. 기존 Node.js 22 이상은 재사용하고, 없으면 공식 배포본의 SHA-256을 확인한 뒤 사용자 폴더에 설치합니다. 시스템 패키지나 영구 PATH를 바꾸지 않으며 Python도 필요 없습니다. [AI 설치 안내](AI_INSTALL.md)에 옵션과 검증 범위를 정리했습니다.
 
 
-### Current remote task discovery (2.2.1)
+### Current remote task discovery (2.3.0)
 
 The skill now collects the current app project host ID or editor remote workspace context before asking for an SSH alias. `setup` accepts AI-collected `--context FILE` metadata and resolves hostname/port/user through local SSH configuration. Project labels are never assumed to be SSH aliases. Duplicate equivalent aliases are deterministic; conflicting endpoints stop without connecting the wrong server. The helper cannot read app-only metadata directly; the invoking AI uses its available tools, then starts setup on the local provider host. An isolated remote session still needs an existing channel to execute on the local PC.

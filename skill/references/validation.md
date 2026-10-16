@@ -1,3 +1,12 @@
+# v2.3.0 laptop SSH flow (2026-10-16)
+
+- Installed the laptop SSH login hook once. Stopped the old connector, moved its saved connection out of the bridge registry and removed only Claude's remote bridge endpoint. No pairing/setup was performed between the ordinary SSH login and the remote Codex run.
+- Ordinary OpenSSH login launched the hidden local helper and created a new connection. The remote command confirmed Claude executable was absent, started Codex CLI 0.162.1 (gpt-6.1-sol), and asked it to use the installed discussion skill.
+- Remote Codex read SKILL.md, ran wait-bridge (ready), then the design workflow. Remote Codex proposed the design; local Claude reviewed over ssh_bridge; final state design_agreed, artifact 7b0aba26b88cdbd15529218fde98a75f7654dfe5296e9eec4b0c1b354da548d0. No implementation was requested or performed.
+- Live record: workflow-0194e4df-3fe8-419e-9145-5ee80ad2ec82 on the test account. The Claude smoke call explicitly used claude-opus-5-5; personal model defaults were preserved.
+- Earlier restricted test sessions correctly failed: network-disabled workspace sandbox could not reach loopback, and a sandbox allowing only the discussion log folder could not initialize the nested Codex app-server. Successful verification allowed network and the test user's ~/.codex runtime directory in that invocation only. Installer does not weaken sandbox or alter permission policy.
+- Windows native LocalCommand quoting was exercised through real SSH; portable native-shell tests also cover paths with spaces. No authenticated macOS-to-server or reverse-provider account test is claimed by CI alone. New aliases need laptop hook refresh; custom LocalCommand, alternate SSH configs and multiple laptops on the same remote port remain documented boundaries.
+
 # v2.2.1 current-task discovery verification
 
 - Five new tests cover app host ID vs misleading project labels, endpoint port/account matching, conflicting context rejection, equivalent aliases vs different proxy routes, editor remote URIs/Unicode and SSH Include cycles.

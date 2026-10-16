@@ -70,7 +70,7 @@ export async function setupConnection(root:string,args:{host?:string;name?:strin
   const ssh=findExecutable('ssh');if(!ssh)throw new Halt('OpenSSH client is required');
   const payload=setupPayload(root);
   const target=args.provider==='claude'?'codex':'claude';
-  const result=await invoke([ssh,'-T','-o','BatchMode=yes','-o','StrictHostKeyChecking=yes','-o','ConnectTimeout=10',known.host,'sh -s'],remoteSetupScript(payload,target),process.cwd(),420);
+  const result=await invoke([ssh,'-T','-o','PermitLocalCommand=no','-o','BatchMode=yes','-o','StrictHostKeyChecking=yes','-o','ConnectTimeout=10',known.host,'sh -s'],remoteSetupScript(payload,target),process.cwd(),420);
   if(result.exit_code!==0)throw new Halt('Remote setup failed: '+result.stderr.slice(-1500));
   const line=result.stdout.split(/\r?\n/).find(s=>s.startsWith('PAIR_SETUP_RESULT='));
   if(!line)throw new Halt('Remote setup returned no result');

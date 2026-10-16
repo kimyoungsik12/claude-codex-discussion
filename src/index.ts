@@ -9,3 +9,5 @@ export * from './supervisor';
 export * from './setup';
 
 export * from './discovery';
+
+export * from './laptop';

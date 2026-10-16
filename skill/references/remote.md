@@ -1,5 +1,20 @@
 # Remote repository, local provider
 
+## Laptop once, then ordinary SSH (2.3.0)
+
+On the laptop with Claude already signed in, run once:
+
+```sh
+npx --yes @youngsik1/claude-codex-discussion@2.3.0 install-laptop --provider claude
+```
+
+Then SSH normally, start Codex on the server, and invoke the discussion skill. No per-server setup command or local terminal action is needed for registered aliases. The SSH login hook launches a hidden local helper; it provisions the remote skill/private Node and starts the authenticated bridge. Remote `wait-bridge` and `run` wait for readiness. Claude is never installed on the server. Only login/setup runs automatically; model work starts when the skill is invoked.
+
+The hook applies to existing explicit aliases in the laptop's OpenSSH config; rerun install-laptop after adding aliases. It preserves existing user LocalCommand settings and reports skipped aliases. Alternate -F configs, custom LocalCommand/PermitLocalCommand=no, non-OpenSSH clients and changed host/user/port overrides may bypass it. Existing host-key/SSH and provider authentication must work non-interactively for the helper. Model sandbox must allow loopback bridge requests, the provider API and writes to its own CLI runtime directory (Codex typically ~/.codex); network-disabled Codex shells cannot use the bridge. No sandbox permissions are changed by installation.
+
+The background connector can outlive SSH logout and reconnects transport only, never replays model work. `connect-disable --name NAME` stops a named connector; `uninstall-laptop` removes the owned SSH login hook (existing connectors are stopped separately). The SSH config is backed up before changes. Remote readiness waits up to eight minutes to cover first-time private Node installation; failures remain explicit. Multiple laptops targeting the same remote port are not automatically merged.
+
+
 The skill is discovered on the host executing the task. Installing on a laptop does not install it on an SSH host. Confirm the app project's actual host/user, not just its display name: a project name and SSH alias can differ.
 
 Install on the repository host with `npx @youngsik1/claude-codex-discussion@latest install --target codex`. Fresh Codex installs go into `~/.agents/skills/claude-codex-discussion`. Existing legacy installs or CODEX_HOME remain supported. Reload the remote session if needed. Node.js 22+ is required on both hosts. Each installed skill has `runtime.json` containing the absolute `node_path`; use it when Node is not on PATH. The app may install its own Codex binary without Node/npm.

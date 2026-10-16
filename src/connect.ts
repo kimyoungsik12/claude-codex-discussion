@@ -14,7 +14,7 @@ export async function connect(options:ConnectOptions) {
   if(!Number.isInteger(options.remotePort)||options.remotePort<1024||options.remotePort>65535)throw new Halt('Remote port must be 1024..65535');
   const ssh=findExecutable('ssh');if(!ssh)throw new Halt('OpenSSH client is required');
   const bridge=await startBridge({provider:options.provider});
-  const args=['-T','-o','BatchMode=yes','-o','StrictHostKeyChecking=yes','-o','ConnectTimeout=10'];
+  const args=['-T','-o','PermitLocalCommand=no','-o','BatchMode=yes','-o','StrictHostKeyChecking=yes','-o','ConnectTimeout=10'];
   try{
     const command=[options.remoteNode,options.remoteCli,'bridge-configure','--provider',options.provider,'--url',`http://127.0.0.1:${options.remotePort}`,'--token-stdin'].map(shellQuote).join(' ');
     await new Promise<void>((resolve,reject)=>{

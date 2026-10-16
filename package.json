@@ -1,6 +1,6 @@
 {
   "name": "@youngsik1/claude-codex-discussion",
-  "version": "2.2.1",
+  "version": "2.3.0",
   "description": "Claude and Codex design agreement, quota-aware implementation and mutual review",
   "type": "commonjs",
   "bin": {

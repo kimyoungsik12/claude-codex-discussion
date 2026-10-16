@@ -19,7 +19,7 @@ try {
   run([process.env.npm_execpath, 'exec', '--yes', '--package', tar, '--', 'claude-codex-discussion', 'install', '--home', root]);
   for (const assistant of ['.agents', '.claude']) {
     const cli = path.join(root, assistant, 'skills', 'claude-codex-discussion', 'dist', 'cli.cjs');
-    assert.equal(run([cli, '--version']).trim(), '2.2.1');
+    assert.equal(run([cli, '--version']).trim(), '2.3.0');
     for (const script of ['install.ps1','install.sh']) assert.ok(fs.existsSync(path.join(root,assistant,'skills','claude-codex-discussion','bootstrap',script)));
 
   }
