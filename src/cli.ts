@@ -26,7 +26,7 @@ async function main() {
   if(action==='install')install(path.resolve(__dirname,'..'),values.home??home(),values.target??'both');
   else if(action==='install-laptop')console.log(JSON.stringify(await installLaptop(path.resolve(__dirname,'..'),(values.provider??'claude') as Provider)));
   else if(action==='uninstall-laptop')console.log(JSON.stringify(uninstallLaptop()));
-  else if(action==='ssh-login')await loginStart(values.ssh??'',(values.provider??'claude') as Provider,Number(values['remote-port']),__filename);
+  else if(action==='ssh-login'){const log=console.log;console.log=()=>{};try{await loginStart(values.ssh??'',(values.provider??'claude') as Provider,Number(values['remote-port']),__filename);}finally{console.log=log;}}
   else if(action==='ssh-bootstrap')await loginBootstrap(path.resolve(__dirname,'..'),values.ssh??'',(values.provider??'claude') as Provider);
   else if(action==='wait-bridge')console.log(JSON.stringify(await waitBridge((values.provider??'claude') as Provider)));
   else if(action==='doctor')process.exitCode=await doctor()?0:2;
