@@ -5,7 +5,8 @@ const base=path.resolve(__dirname,'..');
 test('bootstrap rejects corrupted download before extracting or installing a runtime',t=>{
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'pair-bootstrap-negative-'));
  t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
- const target=path.join(root,'runtime');let result;
+ // Drive-letter casing can differ between TEMP and Resolve-Path on Windows CI.
+ const target=path.join(root,'runtime').replace(/^[A-Z]:/,s=>s.toLowerCase());let result;
  if(process.platform==='win32'){
   const quote=s=>"'"+s.replaceAll("'","''")+"'";
   const script=path.join(root,'check.ps1');

@@ -52,7 +52,8 @@ if (-not $nodePath) {
     } finally {
       # Only delete the checked staging child created by this invocation.
       $fullStage = [IO.Path]::GetFullPath($stage)
-      if ($fullStage.StartsWith($Root + [IO.Path]::DirectorySeparatorChar) -and (Split-Path $fullStage -Leaf).StartsWith('.stage-')) {
+      $rootPrefix = [IO.Path]::GetFullPath($Root).TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
+      if ($fullStage.StartsWith($rootPrefix, [StringComparison]::OrdinalIgnoreCase) -and (Split-Path $fullStage -Leaf).StartsWith('.stage-')) {
         if (Test-Path -LiteralPath $fullStage) { Remove-Item -LiteralPath $fullStage -Recurse -Force }
       }
       $lock.Dispose()
